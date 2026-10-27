@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getUserMemberships } from "@/features/auth/session";
 import { selectComplex, signOut } from "@/features/auth/actions";
@@ -12,6 +13,7 @@ export default async function SelectComplexPage({ searchParams }: { searchParams
       <input type="hidden" name="complex_id" value={membership.complex_id} />
       <Button type="submit">{membership.complexes?.name ?? "Abrir complejo"}</Button><p className="ui-hint">{membership.role === "owner" ? "Propietario" : "Administrador"}</p>
     </form>)}
+    <Link href="/admin/invitaciones/aceptar">Tengo una invitación</Link>
     <form action={signOut}><Button type="submit" variant="secondary">Cerrar sesión</Button></form>
   </section>;
 }

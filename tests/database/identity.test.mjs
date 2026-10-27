@@ -27,6 +27,9 @@ async function as(role, user, query, params = []) {
 const member = (user, query, params) => as('authenticated', user, query, params);
 const denied = (operation) => assert.rejects(operation, (error) => error.code === '42501');
 async function invite(complex = a, email = 'admin@example.com', owner = users.ownerA) {
+  // Cada escenario funcional representa una emisión fuera de la ventana previa.
+  // Solo altera fixtures de esta base embebida; la prueba del límite llama RPC directamente.
+  await db.query("update public.team_invitations set created_at = least(created_at, now() - interval '61 seconds') where complex_id = $1", [complex]);
   return (await member(owner, 'select * from public.invite_administrator($1, $2)', [complex, email])).rows[0];
 }
 const accept = (user, token) => member(user, 'select public.accept_team_invitation($1) as id', [token]);
@@ -153,4 +156,15 @@ test('todas las tablas tienen RLS y ninguna función queda ejecutable por PUBLIC
   assert.ok(tables.rows.every((table) => table.relrowsecurity));
   const grants = await db.query("select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a where n.nspname in ('public', 'private') and a.grantee = 0 and a.privilege_type = 'EXECUTE'");
   assert.deepEqual(grants.rows, []);
+});
+
+test('límite por complejo rechaza reintentos y conserva la invitación previa al hacer rollback', async () => {
+  const original = await invite(a, 'guest@example.com');
+  await assert.rejects(member(users.ownerA, 'select * from public.invite_administrator($1, $2)', [a, 'guest@example.com']), (error) => error.code === 'P0001');
+  assert.equal((await db.query('select revoked_at from public.team_invitations where id = $1', [original.invitation_id])).rows[0].revoked_at, null);
+  await member(users.ownerA, 'select public.revoke_team_invitation($1, $2)', [a, original.invitation_id]);
+  await assert.rejects(member(users.ownerA, 'select * from public.invite_administrator($1, $2)', [a, 'other@example.com']), (error) => error.code === 'P0001');
+  // El límite de A no impide emitir en B ni volver a emitir luego de la ventana.
+  await invite(b, 'guest@example.com', users.ownerB);
+  await invite(a, 'guest@example.com');
 });

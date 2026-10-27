@@ -2,7 +2,27 @@
 
 Fecha inicial: 26 de octubre de 2026. Estado: **migración aplicada y acceso del equipo integrado; F04 sigue abierta**.
 
+## Continuación local — 27 de octubre de 2026
+
+Inicialmente esta copia no tenía `.env.local`. Se configuró posteriormente con la URL y clave pública facilitadas por el usuario y Auth respondió HTTP 200. Esto verifica conectividad, no login ni membresías. No se modificaron cuentas remotas.
+
+Se incorporó `src/features/auth/team-actions.ts`: acción de servidor para revocar administradores o invitaciones usando las funciones SQL existentes. Exige propietario vigente, valida tipo e identificador y obtiene el complejo del contexto autorizado; ignora el complejo enviado por el navegador. PostgreSQL conserva la autorización final y la protección del propietario. La acción todavía no está conectada a una pantalla. Se agregaron seis pruebas de permisos, entradas, alcance y errores; la suite unitaria completa aprobó 37 pruebas. Quedan pendientes UI y verificación autenticada real.
+
+Se agregó `src/features/auth/session.test.ts` para verificar las guardas del servidor: configuración ausente, sesión ausente/vencida, email sin verificar, consulta de membresías vigentes por usuario, cookie ajena o inválida, complejo no legible, revocación entre peticiones, cambio entre complejos autorizados y fallo de la consulta. Supabase y las APIs de Next están simulados; estas pruebas no certifican correo, cookies reales, RLS remoto ni recorridos de navegador. F04 permanece abierta con los pendientes de alta, invitaciones y validación real descritos abajo.
+
+Verificación inicial: `pnpm test` aprobó 31 pruebas (13 nuevas); después de agregar la acción de equipo aprobó 37. `pnpm lint` y `pnpm typecheck` finalizaron correctamente en ambos incrementos. pnpm preparó las dependencias del lockfile existente; no se cambiaron versiones. No se ejecutaron recorridos autenticados remotos ni de navegador.
+
 ## Actualización: conexión con Supabase
+
+Verificación del adaptador de correo: 45 pruebas unitarias aprobadas; lint y TypeScript sin errores. Se simularon las respuestas del proveedor; no se verificaron entrega real ni presentación del formulario autenticado.
+
+Emisión por correo: se agregó un adaptador HTTP de Resend y formulario en Equipo. Configurar `RESEND_API_KEY` e `INVITATION_FROM` (email simple autorizado) solo en `.env.local`; sin estas variables no se emiten tokens. La acción exige propietario, valida destinatario, genera el token mediante SQL y lo envía únicamente al proveedor por HTTPS, en texto plano con instrucciones para ingresar y pegar el código. Una respuesta aceptada no certifica entrega. Ante fallo o timeout se intenta revocar; si esa revocación falla se informa que debe revisarse la invitación pendiente. Hay una comprobación de una emisión por minuto/complejo: no es atómica y no garantiza contención entre solicitudes simultáneas; reforzar en SQL antes del piloto. Resend recibe email y credencial de invitación para entregarla. No se enviaron mensajes reales en esta entrega. El segundo email facilitado por el usuario queda para prueba manual, sin precargarlo en el código. Pendientes configurar proveedor/remitente, verificar cuenta destinataria y ejecutar recepción, aceptación y revocación reales. La creación de cuentas invitadas continúa siendo asistida.
+
+Verificación de aceptación: `pnpm test` aprobó 41 pruebas; `pnpm lint` y `pnpm typecheck` finalizaron sin errores. Pendientes revisión visual y aceptación real con una segunda cuenta.
+
+Continuación de aceptación: se incorporó `/admin/invitaciones/aceptar`, enlazada desde la selección de complejos. Requiere cuenta verificada, permite pegar un código recibido y llama a `accept_team_invitation` con el cliente de sesión. PostgreSQL verifica destinatario, vigencia y revocación; el servidor no devuelve el código ni detalles de errores. Al aceptar se actualiza el layout y se vuelve a elegir complejo. Este recorrido manual prepara la aceptación, pero no cierra la entrega por correo, el alta de cuentas invitadas ni las pruebas reales entre dos usuarios. El enlace de demo del panel ahora identifica explícitamente los datos ficticios de Los Álamos.
+
+Actualización de interfaz del 27 de octubre: `/admin/equipo` conecta la acción de revocación con formularios de confirmación, estados de carga/error y listados reales de membresías e invitaciones. El enlace aparece para propietarios; el cargador de servidor también exige ese rol antes de consultar, filtra ambas tablas por el complejo autorizado y conserva RLS. Se muestran invitaciones aceptadas, revocadas, vencidas y pendientes. El email del integrante se obtiene de la invitación aceptada cuando existe; para altas sin invitación se muestra el identificador de cuenta. No hay todavía emisión ni entrega de invitaciones. Queda pendiente revisar visualmente la pantalla y probar revocaciones con una sesión real de propietario. Las pruebas unitarias existentes siguen aprobando (37).
 
 El usuario creó el proyecto de desarrollo y configuró `.env.local`, excluido de Git. Se verificó conectividad con Auth (HTTP 200), se vinculó el proyecto mediante Supabase CLI 2.122.0 y se aplicó `202610260001_identity.sql` después de revisar el dry run. Los tipos de `src/lib/supabase/database.types.ts` se generaron desde ese esquema remoto, no se escribieron a mano.
 
