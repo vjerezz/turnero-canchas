@@ -1,6 +1,6 @@
 # ADR-001 — Acceso a datos y migraciones
 
-Fecha: 24 de octubre de 2026. Estado: elección técnica para el MVP durante F00. Responsable: Codex. Implementación: pendiente de F01/F04.
+Fecha: 24 de octubre de 2026. Estado: elección técnica para el MVP durante F00. Responsable: Codex. Implementación en [F04](f04-base-identidad.md): primera migración aplicada, cliente tipado, tipos generados desde Supabase y pruebas SQL locales/remotas. Sigue pendiente la aceptación completa de sesiones, correo e invitaciones.
 
 ## Decisión
 

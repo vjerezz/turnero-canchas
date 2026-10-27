@@ -197,6 +197,8 @@ Estado al 26 de octubre de 2026: completada. Ver [implementación, verificacione
 
 ### F04 — Identidad, complejos y seguridad
 
+Estado: migración de identidad aplicada en Supabase, tipos generados, cliente y pantallas de ingreso/recuperación/selección integrados. SQL probado en PostgreSQL embebido y Supabase remoto con rollback. Ver [registro F04](architecture/f04-base-identidad.md). Pendientes alta inicial, correo, invitaciones UI y aceptación completa con sesiones reales; la fase no está completa.
+
 **Dependencia:** F01, D01, D03, D04 y definición de datos mínimos. **Resultado:** base multi-complejo segura.
 
 - F04.1: entornos Supabase, migraciones iniciales, generación de tipos y datos de prueba de dos complejos.

@@ -36,7 +36,7 @@ export function AppShell({ area, children, navigation, context, basePath = "" }:
   return <AreaProvider area={area}><div onFocusCapture={keepFocusVisible} className={`app-shell ${isAdmin ? "app-shell-admin" : "app-shell-player"}`}>
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
     <header className="site-header">
-      <Link className="brand" href={`${basePath}${isAdmin ? "/admin" : "/"}`} aria-label={`Turnero Canchas, ${isAdmin ? "administración" : "inicio"}`}><span className="brand-mark" aria-hidden="true">T</span>Turnero <span>Canchas</span></Link>
+      <Link className="brand" href={`${basePath}${isAdmin ? "/admin" : "/"}`}><span className="brand-mark" aria-hidden="true">T</span>Turnero <span>Canchas</span></Link>
       <nav className="shell-header-links" aria-label="Accesos del portal">{!isAdmin && basePath && links}</nav>
       <Button variant="secondary" asChild><Link href={`${basePath}${isAdmin ? "/" : "/admin"}`} aria-label={isAdmin ? "Portal de jugadores" : "Soy un complejo"}><span className="shell-link-full">{isAdmin ? "Portal de jugadores" : "Soy un complejo"}</span><span className="shell-link-short" aria-hidden="true">{isAdmin ? "Jugadores" : "Complejos"}</span><ArrowUpRight aria-hidden="true" /></Link></Button>
     </header>

@@ -6,7 +6,7 @@ SaaS de gestión y reservas deportivas para múltiples complejos. Interfaz en es
 
 F03: prototipo navegable del jugador y la administración, sobre el sistema de interfaz F02. Catálogo, reserva invitada, recuperación privada, agenda, panel, canchas, clientes, equipo y configuración con datos ficticios. Disponible solo en desarrollo bajo `/demo`; no es un sistema de reservas operativo.
 
-`/admin` todavía es pública y no contiene datos operativos. Autenticación, Supabase, RLS, reservas, Mercado Pago y correo no están implementados ni conectados. Componentes locales con convenciones shadcn/ui y primitivas Radix; `components.json` conserva la integración sin regenerar la paleta. No desplegar esta base como un sistema de reservas funcional.
+F04 en curso: Supabase de desarrollo conectado, migración de identidad aplicada y tipos generados. `/admin` exige sesión y membresía vigente; hay ingreso, salida, recuperación y selección de complejo. Ver [configuración, verificaciones y pendientes de F04](docs/architecture/f04-base-identidad.md). Faltan el alta inicial del propietario, verificar el correo y completar invitaciones/recorridos autenticados. Reservas y Mercado Pago están pendientes. No desplegar esta base como un sistema de reservas funcional.
 
 ## Requisitos e instalación
 
@@ -25,7 +25,7 @@ Con `pnpm dev`, abrir [biblioteca F02](http://localhost:3000/dev/ui). Permite al
 
 Prototipo F03: [jugador](http://localhost:3000/demo), [administración](http://localhost:3000/demo/admin) e [índice de recorridos](http://localhost:3000/demo/recorridos). `/demo` y sus descendientes también devuelven 404 en producción. Los cambios de ejemplo se conservan solo en memoria al navegar y se reinician al recargar. Usar datos inventados en los formularios.
 
-No se requieren credenciales externas para F01. Opcionalmente copiar `.env.example` a `.env.local` y configurar `APP_URL`. Se valida como origen HTTPS, salvo HTTP en localhost; sin credenciales, rutas, parámetros ni fragmentos. La configuración se lee mediante un módulo `server-only`. Las variables del navegador no deben contener secretos.
+Para el prototipo F03 no se requieren credenciales. Para el acceso real de F04, copiar `.env.example` a `.env.local` y completar `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` con la URL y clave pública del proyecto. Nunca usar la clave secreta o service_role. `APP_URL` debe coincidir con el origen abierto en navegador, inicialmente `http://localhost:3000`; se valida como origen HTTPS salvo localhost. Ver la configuración de callbacks en el registro F04. `.env.local` no se versiona.
 
 ## Comandos reales
 
@@ -35,6 +35,7 @@ No se requieren credenciales externas para F01. Opcionalmente copiar `.env.examp
 | `pnpm lint` | ESLint, cero warnings admitidos |
 | `pnpm typecheck` | Genera tipos de rutas y ejecuta TypeScript sin emitir |
 | `pnpm test` | Pruebas unitarias de configuración con Vitest |
+| `pnpm test:db` | Migraciones, funciones y aislamiento RLS en PostgreSQL embebido; sin credenciales ni Docker |
 | `pnpm test:watch` | Vitest interactivo |
 | `pnpm build` | Compilación de producción |
 | `pnpm start` | Sirve el build de producción |
@@ -52,7 +53,9 @@ Para E2E ejecutar primero `pnpm build`. Playwright inicia y detiene su propio se
 ## Estructura
 
 - `src/app/(player)/`: portal y layout con `data-area="player"`.
-- `src/app/admin/`: presentación inicial de administración; protección prevista para F04.
+- `src/app/admin/`: acceso del equipo, recuperación, selección y panel protegido.
+- `src/features/auth/`: acciones de servidor y validación de sesión/membresías por petición.
+- `src/lib/supabase/`: cliente de servidor, configuración validada y tipos generados desde Supabase.
 - `src/lib/`: validación de configuración y acceso de servidor.
 - `src/components/ui/`: componentes y contexto de área para portales.
 - `src/components/layout/`: shell, cabecera y acciones inferiores.
@@ -61,17 +64,19 @@ Para E2E ejecutar primero `pnpm build`. Playwright inicia y detiene su propio se
 - `src/features/demo/`: pantallas, fixtures fijos y estado local sin persistencia; no usar como capa de negocio real.
 - `src/styles/tokens.css`: única fuente de tokens; `globals.css` los importa y conecta con Tailwind.
 - `tests/e2e/`: navegación, teclado, rutas y desbordamiento horizontal.
+- `tests/database/`: pruebas SQL en memoria con infraestructura Auth mínima simulada; no verifica Supabase Auth ni su API.
+- `supabase/migrations/`: esquema y permisos versionados; migración inicial aplicada al entorno de desarrollo.
 - `docs/`: decisiones, plan y referencias originales.
 
 Las fuentes provienen de paquetes Fontsource fijados y se sirven desde la aplicación; el build no consulta Google Fonts. Los tokens usan los nombres de familia variables de esos paquetes, sin cambiar la identidad visual. `components.css` define componentes consumiendo esos tokens; los portales reciben explícitamente `data-area` a través del contexto React.
 
 ## Verificación y límites
 
-Ver los registros [F01](docs/architecture/f01-inicializacion.md), [F02](docs/architecture/f02-interfaz-responsive.md) y [F03](docs/architecture/f03-prototipo.md) para resultados y límites. Las pruebas de demo verifican recorridos visuales y cambios locales; no verifican reservas, pagos ni permisos reales: esas funciones todavía no existen. F04 es la próxima fase.
+Ver los registros [F01](docs/architecture/f01-inicializacion.md), [F02](docs/architecture/f02-interfaz-responsive.md), [F03](docs/architecture/f03-prototipo.md) y [F04](docs/architecture/f04-base-identidad.md) para resultados y límites. Las pruebas de demo verifican recorridos visuales y cambios locales; las de F04 verifican SQL y RLS, sin integración de Auth/API. F04 sigue abierta.
 
 ESLint 9.39.5 está fijado por compatibilidad con los plugins incluidos por `eslint-config-next` 16.4.3. El registro lo marca como deprecated; ESLint 10.13.0 produjo incompatibilidades de peer dependencies con import, JSX accessibility y React. Actualizar en conjunto cuando esas dependencias soporten la versión nueva. No se suprimieron reglas para ocultar la incompatibilidad.
 
-Git está inicializado localmente en `main`, sin remoto ni publicación. Las instalaciones permiten scripts únicamente de `sharp`, `esbuild` y `unrs-resolver` mediante `pnpm-workspace.yaml`; revisar antes de ampliar esa lista.
+Las instalaciones permiten scripts únicamente de `sharp`, `esbuild` y `unrs-resolver` mediante `pnpm-workspace.yaml`; revisar antes de ampliar esa lista. Los cambios de F04 se preparan para un commit posterior; consultar `git status` para el estado actual del checkout.
 
 ## Documentación del producto
 

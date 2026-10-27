@@ -18,6 +18,8 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } } },
   ],
   webServer: {
+    // Suite sin sesiones: habilita formularios sin depender de secretos ni del proyecto real.
+    env: { SUPABASE_URL: "https://example.supabase.co", SUPABASE_PUBLISHABLE_KEY: "sb_publishable_example", APP_URL: "http://localhost:3000" },
     command: "pnpm start --hostname 127.0.0.1 --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,

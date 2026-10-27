@@ -16,7 +16,7 @@ for (const route of ["/", "/admin"]) {
     await expect(page.getByRole("main")).toBeFocused();
     await page.screenshot({ path: testInfo.outputPath("page.png"), fullPage: true });
     await page.getByRole("link", { name: route === "/" ? "Soy un complejo" : "Portal de jugadores" }).click();
-    await expect(page).toHaveURL(route === "/" ? "/admin" : "/");
+    await expect(page).toHaveURL(route === "/" ? "/admin/ingresar" : "/");
     expect(errors).toEqual([]);
   });
 }
