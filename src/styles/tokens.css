@@ -1,0 +1,236 @@
+/*
+ * Turnero Canchas — tokens de diseño, tema claro v1.
+ * Fuente: dirección visual aprobada en docs/design/screens/.
+ * Los valores de hover, fondos de reserva, sombra y capas completan la referencia.
+ * No contiene componentes ni carga fuentes. Importar una sola vez desde el CSS global.
+ * Ubicación única: src/styles/tokens.css; importado por globals.css.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Paleta base: los componentes consumen los alias semánticos de abajo. */
+  --palette-white: #ffffff;
+  --palette-ink: #0e1116;
+  --palette-volt: #c8f031;
+  --palette-blue: #2347f5;
+  --palette-surface: #f6f7f9;
+  --palette-line: #e6e8ec;
+  --palette-text-secondary: #4b5563;
+  --palette-text-muted: #667085;
+  --palette-success: #0f7b4f;
+  --palette-success-soft: #e2f5eb;
+  --palette-warning: #99590a;
+  --palette-warning-soft: #fff0d2;
+  --palette-error: #c42b1c;
+  --palette-error-soft: #fde7e4;
+
+  /* Superficies y texto. Nombres compatibles con el tema de shadcn/ui. */
+  --background: var(--palette-white);
+  --foreground: var(--palette-ink);
+  --surface: var(--palette-surface);
+  --card: var(--palette-white);
+  --card-foreground: var(--palette-ink);
+  --popover: var(--palette-white);
+  --popover-foreground: var(--palette-ink);
+  --secondary: var(--palette-surface);
+  --secondary-foreground: var(--palette-ink);
+  --muted: var(--palette-surface);
+  --muted-foreground: var(--palette-text-muted);
+  --text-secondary: var(--palette-text-secondary);
+  --border: var(--palette-line);
+  /* Borde más visible para controles que dependen del contorno. */
+  --input: var(--palette-text-muted);
+  --ring: var(--palette-blue);
+  --link: var(--palette-blue);
+  --selection-background: var(--palette-volt);
+  --selection-foreground: var(--palette-ink);
+  --overlay: rgb(14 17 22 / 40%);
+
+  /* Acciones: admin por defecto, jugador mediante data-area="player". */
+  --action-admin: var(--palette-ink);
+  --action-admin-hover: #252b35;
+  --action-player: var(--palette-volt);
+  --action-player-hover: #b7df20;
+  --primary: var(--action-admin);
+  --primary-foreground: var(--palette-white);
+  --primary-hover: var(--action-admin-hover);
+  /* accent es hover/selección de menús, no el color Volt de marca. */
+  --accent: var(--palette-surface);
+  --accent-foreground: var(--palette-ink);
+  --destructive: var(--palette-error);
+  --destructive-foreground: var(--palette-white);
+  --destructive-hover: #a62317;
+  --disabled-background: var(--palette-line);
+  --disabled-foreground: var(--palette-text-secondary);
+
+  /* Feedback: pares fondo/texto, no estados de negocio. */
+  --success: var(--palette-success);
+  --success-background: var(--palette-success-soft);
+  --warning: var(--palette-warning);
+  --warning-background: var(--palette-warning-soft);
+  --error: var(--palette-error);
+  --error-background: var(--palette-error-soft);
+  --info: var(--palette-blue);
+  --info-background: #eef1ff;
+
+  /* Apariencia de agenda. No define transiciones ni estados persistidos. */
+  --booking-available-background: var(--background);
+  --booking-available-foreground: var(--foreground);
+  --booking-available-border: var(--palette-text-muted);
+  --booking-confirmed-background: var(--info-background);
+  --booking-confirmed-foreground: var(--info);
+  --booking-confirmed-border: var(--info);
+  --booking-pending-background: var(--warning-background);
+  --booking-pending-foreground: var(--warning);
+  --booking-pending-border: var(--warning);
+  --booking-live-background: var(--palette-volt);
+  --booking-live-foreground: var(--palette-ink);
+  --booking-live-border: var(--palette-ink);
+  --booking-completed-background: var(--surface);
+  --booking-completed-foreground: var(--text-secondary);
+  --booking-cancelled-background: var(--error-background);
+  --booking-cancelled-foreground: var(--error);
+  --booking-blocked-background: var(--surface);
+  --booking-blocked-foreground: var(--text-secondary);
+  --booking-blocked-border: var(--palette-text-muted);
+  --booking-blocked-pattern: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 4px,
+    rgb(14 17 22 / 8%) 4px,
+    rgb(14 17 22 / 8%) 6px
+  );
+  --slot-selected-background: var(--selection-background);
+  --slot-selected-foreground: var(--selection-foreground);
+  --calendar-now: var(--palette-ink);
+
+  /* Familias: cargar los archivos de fuentes en la aplicación. */
+  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-numeric: tabular-nums;
+
+  /* Escala con su interlineado. Valores rem sobre raíz de 16 px. */
+  --text-display: 3rem;
+  --leading-display: 3.25rem;
+  --text-h1: 2rem;
+  --leading-h1: 2.375rem;
+  --text-h2: 1.375rem;
+  --leading-h2: 1.75rem;
+  --text-h3: 1.0625rem;
+  --leading-h3: 1.5rem;
+  --text-body: 0.9375rem;
+  --leading-body: 1.375rem;
+  --text-table: 0.875rem;
+  --leading-table: 1.25rem;
+  --text-label: 0.75rem;
+  --leading-label: 1rem;
+
+  /* Espaciado: base de 4 px; se permite 0 para ausencia de espacio. */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --card-padding: var(--space-6);
+  --card-gap: var(--space-6);
+  --section-gap: var(--space-12);
+  --page-padding-mobile: var(--space-4);
+  --page-padding-desktop: var(--space-8);
+  /* F02: límites compartidos de lectura, paneles y navegación. */
+  --layout-content-max: 80rem;
+  --layout-sidebar: 15.5rem;
+  --layout-dialog: 32rem;
+  --layout-sheet: 28rem;
+  --layout-mobile-nav: 4.5rem;
+  --layout-toast: 25rem;
+  --layout-card-min: 18rem;
+  --layout-slot-min: 7rem;
+  --icon-size: 1.25rem;
+  --swatch-height: 5rem;
+  /* F03: geometría de las referencias, adaptada al contenedor fluido. */
+  --court-media-height: 10.5rem;
+  --court-media-height-mobile: 7rem;
+  --court-art-volt-background: color-mix(in srgb, var(--selection-background) 22%, var(--background));
+  --calendar-time-width: 3.5rem;
+  --calendar-column-min: 9.5rem;
+  --calendar-header-height: 3.25rem;
+  --calendar-hour-height: 4.5rem;
+  --form-content-max: 36rem;
+  --booking-slot-min: 6rem;
+  --booking-day-width: 3.5rem;
+  --booking-day-height: 4.5rem;
+
+  /* Radios: controles 8, tarjetas internas 12, tarjetas/modales 16. */
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: var(--radius);
+  --radius-lg: 1rem;
+  --radius-pill: 9999px;
+  --radius-control: var(--radius-sm);
+  --radius-card-inner: var(--radius-md);
+  --radius-card: var(--radius-lg);
+  --radius-dialog: var(--radius-lg);
+  --border-width: 1px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* Tamaños: el componente debe aplicar la variante móvil adecuada. */
+  --control-height-sm: 2rem;
+  --control-height: 2.5rem;
+  --control-height-lg: 3rem;
+  --control-height-mobile: var(--control-height-lg);
+  --touch-target-min: 2.75rem;
+  --slot-height: 2.75rem;
+  --badge-height: 1.5rem;
+  --table-row-height: 3.25rem;
+
+  /* Elevación y orden de capas. Las tarjetas no llevan sombra. */
+  --shadow-none: none;
+  --shadow-floating: 0 8px 28px rgb(14 17 22 / 12%);
+  --layer-base: 0;
+  --layer-sticky: 10;
+  --layer-dropdown: 20;
+  --layer-overlay: 30;
+  --layer-dialog: 40;
+  --layer-toast: 50;
+
+  /* Movimiento: los componentes deben consumir estas variables. */
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --scale-slot-selected: 1.02;
+}
+
+/* Colocar el atributo en el contenedor del portal, fuera de portales de modal.
+ * Los modales renderizados en body deben recibir también este contexto.
+ */
+[data-area="player"] {
+  --primary: var(--action-player);
+  --primary-foreground: var(--palette-ink);
+  --primary-hover: var(--action-player-hover);
+}
+
+[data-area="admin"] {
+  --primary: var(--action-admin);
+  --primary-foreground: var(--palette-white);
+  --primary-hover: var(--action-admin-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --scale-slot-selected: 1;
+  }
+}
