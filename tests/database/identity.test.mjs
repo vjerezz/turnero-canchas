@@ -152,7 +152,7 @@ test('el propietario no puede revocarse ni ser degradado por una invitación', a
 
 test('todas las tablas tienen RLS y ninguna función queda ejecutable por PUBLIC', async () => {
   const tables = await db.query("select relname, relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname in ('public', 'private') and c.relkind = 'r'");
-  assert.equal(tables.rows.length, 5);
+  assert.equal(tables.rows.length, 7);
   assert.ok(tables.rows.every((table) => table.relrowsecurity));
   const grants = await db.query("select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a where n.nspname in ('public', 'private') and a.grantee = 0 and a.privilege_type = 'EXECUTE'");
   assert.deepEqual(grants.rows, []);
@@ -167,4 +167,52 @@ test('límite por complejo rechaza reintentos y conserva la invitación previa a
   // El límite de A no impide emitir en B ni volver a emitir luego de la ventana.
   await invite(b, 'guest@example.com', users.ownerB);
   await invite(a, 'guest@example.com');
+});
+
+test('canchas: aislamiento, duración por deporte, precio y desactivación sin pérdida de datos', async () => {
+  const court = (await member(users.ownerA, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Cancha 1','padel',1500050) returning *", [a])).rows[0];
+  assert.equal(court.duration_minutes, 90);
+  assert.equal(Number(court.price_in_cents), 1500050);
+  assert.equal((await member(users.ownerB, 'select * from public.courts where id=$1', [court.id])).rows.length, 0);
+  await denied(member(users.ownerB, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Intrusa','football-5',100)", [a]));
+  assert.equal((await member(users.ownerB, "update public.courts set name='Intrusa' where id=$1 returning id", [court.id])).rows.length, 0);
+  await denied(member(users.ownerA, 'update public.courts set complex_id=$1 where id=$2', [b, court.id]));
+  await denied(member(users.ownerA, 'delete from public.courts where id=$1', [court.id]));
+  await assert.rejects(member(users.ownerA, 'update public.courts set duration_minutes=30 where id=$1', [court.id]), (error) => error.code === '428C9');
+  await assert.rejects(member(users.ownerA, 'update public.courts set price_in_cents=-1 where id=$1', [court.id]));
+  await assert.rejects(member(users.ownerA, "update public.courts set sport='unknown' where id=$1", [court.id]));
+  await member(users.ownerA, "update public.courts set sport='football-6',active=false where id=$1", [court.id]);
+  const updated = (await member(users.ownerA, 'select * from public.courts where id=$1', [court.id])).rows[0];
+  assert.equal(updated.active, false); assert.equal(updated.duration_minutes, 60);
+  assert.equal(Number(updated.price_in_cents), 1500050);
+  await denied(as('anon', null, 'select * from public.courts'));
+});
+
+test('administrador puede gestionar canchas y pierde acceso al revocar su membresía', async () => {
+  const invitation = await invite(b, 'admin@example.com', users.ownerB);
+  await accept(users.admin, invitation.invitation_token);
+  const court = (await member(users.admin, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Cancha B','football-5',10000) returning id", [b])).rows[0];
+  await member(users.ownerB, 'select public.revoke_administrator($1,$2)', [b, users.admin]);
+  assert.equal((await member(users.admin, 'select * from public.courts where id=$1', [court.id])).rows.length, 0);
+  assert.equal((await member(users.admin, 'update public.courts set active=false where id=$1 returning id', [court.id])).rows.length, 0);
+});
+
+test('horarios: reemplazo atómico, aislamiento, medianoche y control de versión', async () => {
+  const court = (await member(users.ownerA, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Nocturna','padel',10000) returning id", [a])).rows[0];
+  const rpc = (who, complex, version, windows) => member(who, 'select public.replace_court_weekly_hours($1,$2,$3,$4::jsonb)', [complex, court.id, version, JSON.stringify(windows)]);
+  const original = [{ weekday: 6, opens_minute: 1080, closes_minute: 1560 }];
+  await rpc(users.ownerA, a, 0, original);
+  await denied(rpc(users.ownerB, b, 1, []));
+  await denied(rpc(users.ownerB, a, 1, []));
+  assert.equal((await member(users.ownerB, 'select * from public.court_weekly_hours where court_id=$1', [court.id])).rows.length, 0);
+  await assert.rejects(rpc(users.ownerA, a, 0, []), (error) => error.code === '40001');
+  await assert.rejects(rpc(users.ownerA, a, 1, [...original, { weekday: 0, opens_minute: 60, closes_minute: 180 }]), (error) => error.code === '23P01');
+  await assert.rejects(rpc(users.ownerA, a, 1, [{ weekday: 0, opens_minute: 600, closes_minute: 500 }]));
+  assert.deepEqual((await member(users.ownerA, 'select weekday, opens_minute, closes_minute from public.court_weekly_hours where court_id=$1', [court.id])).rows, original);
+  assert.equal((await member(users.ownerA, 'select hours_version from public.courts where id=$1', [court.id])).rows[0].hours_version, 1);
+  await denied(member(users.ownerA, 'delete from public.court_weekly_hours where court_id=$1', [court.id]));
+  await denied(member(users.ownerA, 'update public.courts set hours_version=0 where id=$1', [court.id]));
+  await rpc(users.ownerA, a, 1, [...original, { weekday: 0, opens_minute: 120, closes_minute: 240 }]);
+  await rpc(users.ownerA, a, 2, []);
+  assert.equal((await member(users.ownerA, 'select * from public.court_weekly_hours where court_id=$1', [court.id])).rows.length, 0);
 });

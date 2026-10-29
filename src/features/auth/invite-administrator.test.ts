@@ -19,6 +19,12 @@ it("no crea invitaciones sin correo configurado", async () => {
   await inviteAdministrator({ message: "" }, form());
   expect(mocks.rpc).not.toHaveBeenCalled(); expect(mocks.fetch).not.toHaveBeenCalled();
 });
+it("respeta el rechazo atómico de la base antes de contactar al correo", async () => {
+  mocks.rpc.mockResolvedValue({ data: null, error: { code: "P0001" } });
+  const result = await inviteAdministrator({ message: "" }, form());
+  expect(result.message).toContain("Esperá un minuto");
+  expect(mocks.fetch).not.toHaveBeenCalled();
+});
 it("rechaza un administrador antes de crear o enviar", async () => {
   mocks.context.mockResolvedValue({ membership: { role: "admin" } });
   await inviteAdministrator({ message: "" }, form());

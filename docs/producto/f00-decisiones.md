@@ -4,6 +4,12 @@ Fecha: 24 de octubre de 2026. Responsable de producto: Valen. Responsable técni
 
 ## Resultado de esta ejecución
 
+Actualización D05 del 28 de octubre: Valen confirmó horarios que cruzan medianoche (ejemplo 18:00–02:00 del día siguiente). Se implementó configuración semanal con cierre al día siguiente y turnos consecutivos; anticipación, horizonte y excepciones siguen pendientes. Esta confirmación sustituye las referencias anteriores a operación nocturna pendiente de decisión.
+
+D06 confirmada el 28 de octubre: precio fijo por turno completo y por cancha, en ARS. No se adoptan tarifas por hora ni franjas para este incremento. `src/features/courts/court-schema.ts` valida importes decimales y los convierte a centavos enteros. Estas validaciones aún no están conectadas a formularios ni persistencia de canchas; la cotización histórica de reservas se concretará en F06.
+
+Actualización del 28 de octubre de 2026 — D05 parcialmente confirmada por Valen: fútbol 5 y fútbol 6 duran 60 minutos; pádel dura 90 minutos; los turnos son consecutivos, sin pausas. La generación comienza en la apertura de la franja y solo ofrece turnos completos que entren antes del cierre. `src/features/courts/schedule.ts` implementa esta base sobre instantes ya resueltos. Siguen pendientes anticipación, horizonte y reglas de operación nocturna; la conversión de horarios locales y la persistencia de canchas aún no están implementadas. D06 quedó confirmada en la actualización anterior: precio fijo por turno y cancha.
+
 | Tarea | Estado | Evidencia / salida pendiente |
 | --- | --- | --- |
 | F00.1 | Registro preparado; D01–D04 resueltas | Decisión técnica D01 y respuestas explícitas de Valen para D02–D04 |

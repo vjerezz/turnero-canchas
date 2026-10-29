@@ -4,6 +4,10 @@ Fecha inicial: 26 de octubre de 2026. Estado: **migración aplicada y acceso del
 
 ## Continuación local — 27 de octubre de 2026
 
+Verificación al 28 de octubre: 12 escenarios SQL embebidos y 65 pruebas unitarias aprobados (incluyen base de turnos/precios F05); lint general y TypeScript sin errores para el incremento, más revisión específica de los nuevos validadores de precio. La migración adicional de límite de invitaciones se aplicó y registró en Supabase el 28 de octubre; se verificó la existencia de la función remota.
+
+Estado al 28 de octubre: Valen confirmó que la prueba de invitación funcionó. Esta confirmación no certifica por sí sola revocación, recuperación, aislamiento entre dos complejos ni sesión vencida. Se preparó `supabase/migrations/202610270001_invitation_rate_limit.sql`, aplicada en Supabase el 28 de octubre: serializa emisiones mediante bloqueo del complejo y rechaza altas dentro de un minuto incluso si se revocó la invitación anterior. La revocación de invitaciones previas que realiza el RPC también se revierte si el límite rechaza la nueva. Se verificaron 12 escenarios en PostgreSQL embebido; falta verificar contención con conexiones independientes en Supabase. El chequeo previo de la aplicación queda como ayuda de UX y la garantía final está implementada en la migración aplicada.
+
 Inicialmente esta copia no tenía `.env.local`. Se configuró posteriormente con la URL y clave pública facilitadas por el usuario y Auth respondió HTTP 200. Esto verifica conectividad, no login ni membresías. No se modificaron cuentas remotas.
 
 Se incorporó `src/features/auth/team-actions.ts`: acción de servidor para revocar administradores o invitaciones usando las funciones SQL existentes. Exige propietario vigente, valida tipo e identificador y obtiene el complejo del contexto autorizado; ignora el complejo enviado por el navegador. PostgreSQL conserva la autorización final y la protección del propietario. La acción todavía no está conectada a una pantalla. Se agregaron seis pruebas de permisos, entradas, alcance y errores; la suite unitaria completa aprobó 37 pruebas. Quedan pendientes UI y verificación autenticada real.

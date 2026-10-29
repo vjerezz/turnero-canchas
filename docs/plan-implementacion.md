@@ -1,5 +1,7 @@
 # Plan de implementación de Turnero Canchas
 
+Estado actualizado al 28 de octubre de 2026: F04 continúa abierta con flujo de invitaciones implementado y prueba manual reportada como exitosa por Valen. Migración adicional aplicada; pendientes de verificación en `architecture/f04-base-identidad.md`. D05 confirmó fútbol 5/6 de 60 minutos y pádel de 90, sin pausas; comenzó la base de generación de turnos de F05. D06 confirmó precio fijo por turno y cancha; las demás reglas comerciales siguen pendientes. Los diagnósticos de planificación siguientes son históricos.
+
 Fecha: 24 de octubre de 2026. Estado: propuesta ejecutable; no implica aprobación de reglas comerciales pendientes. La tarea realizada es planificación, no inicialización de la aplicación.
 
 Actualización de ejecución, 26 de octubre: F01 implementada y F02 desarrollada; consultar [registro F01](architecture/f01-inicializacion.md) y [registro F02](architecture/f02-interfaz-responsive.md). El diagnóstico siguiente describe la carpeta original al planificar. Próxima entrega de producto: F03, pantallas y estados con datos de demostración.

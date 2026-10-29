@@ -4,6 +4,8 @@ SaaS de gestión y reservas deportivas para múltiples complejos. Interfaz en es
 
 ## Estado
 
+F05 iniciada: alta, edición y desactivación de canchas, deportes y precio fijo por turno implementados localmente. Migraciones de canchas y horarios aplicadas en Supabase; listado autenticado verificado en `/admin/canchas`. Ver [configuración y límites de F05](docs/architecture/f05-canchas.md).
+
 F03: prototipo navegable del jugador y la administración, sobre el sistema de interfaz F02. Catálogo, reserva invitada, recuperación privada, agenda, panel, canchas, clientes, equipo y configuración con datos ficticios. Disponible solo en desarrollo bajo `/demo`; no es un sistema de reservas operativo.
 
 F04 en curso: Supabase de desarrollo conectado, migración de identidad aplicada y tipos generados. `/admin` exige sesión y membresía vigente; hay ingreso, salida, recuperación y selección de complejo. Ver [configuración, verificaciones y pendientes de F04](docs/architecture/f04-base-identidad.md). Faltan el alta inicial del propietario, verificar el correo y completar invitaciones/recorridos autenticados. Reservas y Mercado Pago están pendientes. No desplegar esta base como un sistema de reservas funcional.
