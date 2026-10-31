@@ -35,3 +35,27 @@ Por indicación de Valen se creó Cancha 1 en Soccer-v1: fútbol 5, 60 minutos y
 La revisión visual se realizó en el tamaño actual del navegador integrado (600 px); siguen pendientes la matriz de 390/768/1280, teclado completo y edición/desactivación real. El alta y el primer guardado de horarios ya quedaron verificados sobre Supabase, sustituyendo los pendientes históricos de esas dos operaciones.
 
 Se agregaron 13 pruebas de la acción de horarios: contexto autorizado frente a un complejo adulterado, sesión rechazada, campos inválidos, cierre nocturno, cruce domingo/lunes, semana cerrada y errores de versión/permisos sin filtrar detalles internos. Resultado: 92 pruebas unitarias aprobadas y TypeScript sin errores. Estas pruebas simulan el cliente Supabase y no representan concurrencia entre conexiones.
+
+## Excepciones por jornada — 29 de octubre
+
+Implementadas ruta /admin/canchas/[id]/excepciones, formulario de cierre o franja especial y listado persistido. La excepción se identifica por cancha y fecha de apertura; reemplaza toda esa jornada, incluida su continuación al día siguiente, y conserva la madrugada procedente de la jornada anterior. La resolución hoursForServiceDate usa esta prioridad sobre el horario semanal. No crea disponibilidad ni cancela reservas.
+
+Migración 202610290001_date_exceptions aplicada por SQL Editor a Supabase y registrada en su historial dentro de la misma transacción. RLS limita lecturas y escrituras a miembros vigentes; clave compuesta impide asociar una cancha ajena al complejo propio; no se conceden DELETE ni cambios de cancha, complejo o fecha. El servidor valida sesión, cancha y datos antes de escribir. Actualizaciones simultáneas de una misma excepción usan la última escritura; un alta concurrente duplicada devuelve error recuperable.
+
+Verificación: 112 pruebas unitarias y 16 escenarios PostgreSQL embebidos aprobados, TypeScript sin errores. La pantalla autenticada de Soccer-v1 cargó el estado vacío y los campos de horario especial, revisada visualmente a 600 px. No se cargaron cierres reales sin fechas indicadas por el usuario; guardado completo por navegador y matriz responsive siguen pendientes. Falta restaurar el horario semanal eliminando una excepción, validar conflictos entre jornadas especiales y adyacentes al integrar disponibilidad y regenerar tipos desde Supabase. El contrato local de datos sigue identificado como manual.
+
+## Restauración y cierre real — 29 de octubre
+
+Se agregó la opción Volver al horario semanal con confirmación por fecha. Desactiva la excepción conservando sus valores; guardar nuevamente esa fecha la reactiva. La migración 202610290002_restore_weekly_hours fue aplicada y registrada en Supabase. La acción exige membresía vigente y limita la actualización por complejo, cancha y fecha; no se habilita DELETE.
+
+Valen pidió cerrar Cancha 1 el 30/10/2026 desde las 18:00. Se guardó el cierre de esa jornada, que abarca hasta el 31/10 a las 02:00 según su semana vigente. Se verificó en navegador el alta, la restauración temporal del horario semanal y la reactivación del cierre solicitado. El estado final debe conservar Jornada cerrada el 30/10. La madrugada del 30/10 procedente del jueves se conserva. El motor de reservas aún está pendiente.
+
+Verificación local: 113 pruebas unitarias, 17 escenarios SQL y TypeScript aprobados. Las pruebas incluyen desactivar/reactivar sin perder la excepción y denegar actualizaciones desde otro complejo.
+
+## Consulta de turnos por jornada — 29 de octubre
+
+Nueva ruta /admin/canchas/[id]/turnos, enlazada desde Canchas. Permite seleccionar fecha de apertura y combina horario semanal con excepción activa; las excepciones desactivadas recuperan el horario semanal. Muestra turnos completos, madrugada siguiente, cancha inactiva y límites de anticipación de 2 horas/30 días según reloj del servidor. Las consultas siempre se limitan por complejo y cancha autenticados.
+
+La conversión de minutos locales a instantes usa Intl con America/Argentina/Buenos_Aires, sin depender de la zona del host. Se consultan también las excepciones de las jornadas vecinas para advertir superposiciones; esta advertencia no reemplaza una restricción transaccional al crear reservas. La pantalla indica que todavía no consulta reservas ni bloqueos y no presenta los turnos como disponibles.
+
+Verificación: 124 pruebas unitarias y TypeScript aprobados. Navegador real: el 30/10 aparece cerrado; el 29/10 conserva ocho turnos hasta el 30/10 a las 02:00. Se probó selección de fecha y envío por teclado, y se revisó la pantalla a 390, 768 y 1280 px. Sin migración nueva en este incremento. Pendientes F06: ocupación transaccional, estados, creación y confirmación por seña; reglas comerciales confirmadas y faltantes en f00-decisiones.md.

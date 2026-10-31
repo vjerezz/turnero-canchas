@@ -15,6 +15,7 @@ export default async function CourtsPage() {
       <p>{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(court.price_in_cents / 100)} por turno</p>
       <Link href={`/admin/canchas/${court.id}`}>Editar {court.name}</Link>
       <Link href={`/admin/canchas/${court.id}/horarios`}>Configurar horarios de {court.name}</Link>
+      <Link href={`/admin/canchas/${court.id}/turnos`}>Ver turnos por fecha de {court.name}</Link>
     </article>)}
   </section>;
 }

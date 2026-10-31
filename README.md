@@ -12,6 +12,12 @@ F04 en curso: Supabase de desarrollo conectado, migración de identidad aplicada
 
 ## Requisitos e instalación
 
+### Continuar desde otra PC
+
+Clonar el repositorio (o ejecutar `git pull --ff-only` en una copia existente sin cambios pendientes), usar las versiones de Node/pnpm indicadas abajo y ejecutar `pnpm install --frozen-lockfile`. Crear `.env.local` a partir de `.env.example` y configurar las credenciales por separado: Git no incluye `.env.local`. Luego ejecutar `pnpm dev`.
+
+Punto de continuación: F05 incluye excepciones por jornada y vista de turnos por fecha. F06 incorpora el motor SQL de reservas pendientes con seña del 30%, espera de 15 minutos, idempotencia y exclusión de superposiciones. La migración `202610290003_pending_reservations.sql` todavía **no está aplicada al Supabase remoto**. Las migraciones de excepciones `202610290001` y restauración `202610290002` ya fueron aplicadas. Ver [estado y pendientes de F06](docs/architecture/f06-reservas.md) antes de conectar el formulario de reservas o pagos.
+
 - Node.js 24.12.0 (ver `.node-version`; rango admitido Node 24 desde esa versión).
 - pnpm 11.25.0, único gestor del proyecto.
 - Las versiones directas están fijadas en `package.json`; `pnpm-lock.yaml` fija la resolución.

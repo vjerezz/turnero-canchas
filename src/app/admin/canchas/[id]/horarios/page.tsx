@@ -18,6 +18,7 @@ export default async function HoursPage({ params, searchParams }: { params: Prom
   return <section className="ui-card ui-stack auth-card">
     <Link href={`/admin/canchas/${court.id}`}>Volver a la cancha</Link><p>{complex.name} · {court.name}</p><h1>Horarios semanales</h1>
     <p>Hora de Buenos Aires. Una franja por día, con turnos consecutivos de {court.duration_minutes} minutos. Desmarcá los días cerrados.</p>
+    <Link href={`/admin/canchas/${court.id}/excepciones`}>Configurar excepciones por fecha</Link>
     {!court.active && <p className="notice">La cancha está inactiva. Podés preparar sus horarios.</p>}
     {guardado === "1" && <p role="status">Los horarios se guardaron.</p>}
     <HoursForm key={court.hours_version} courtId={court.id} version={court.hours_version} windows={windows} />

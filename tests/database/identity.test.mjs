@@ -2,9 +2,11 @@ import { readFile, readdir } from 'node:fs/promises';
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
+import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist';
+import { randomUUID } from 'node:crypto';
 
 // PostgreSQL embebido: RLS/SQL reales; Auth mínimo simulado, no Supabase Auth.
-const db = new PGlite();
+const db = new PGlite({ extensions: { btree_gist } });
 const users = {
   ownerA: '00000000-0000-4000-8000-000000000001',
   ownerB: '00000000-0000-4000-8000-000000000002',
@@ -57,6 +59,90 @@ before(async () => {
   b = (await as('service_role', null, "select public.bootstrap_complex('Complejo B', 'complejo-b', $1, 'test:fixture-b') as id", [users.ownerB])).rows[0].id;
 }, { timeout: 30000 });
 after(async () => db.close());
+
+async function reservationFixture(price = 3000000, sport = 'football-5') {
+  const court = (await member(users.ownerA, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Reservas',$2,$3) returning id", [a, sport, price])).rows[0].id;
+  await member(users.ownerA, 'select public.replace_court_weekly_hours($1,$2,0,$3)', [a, court, JSON.stringify(Array.from({ length: 7 }, (_, weekday) => ({ weekday, opens_minute: 1080, closes_minute: 1560 })))]);
+  const date = (await db.query("select to_char((clock_timestamp() at time zone 'America/Argentina/Buenos_Aires')::date + 2, 'YYYY-MM-DD') as date")).rows[0].date;
+  const reserve = (minute = 1080, key = randomUUID(), user = users.ownerA, day = date, name = 'Jugador Prueba') => member(user,
+    'select * from public.create_team_reservation($1,$2,$3,$4,$5,$6,$7)', [a, court, day, minute, name, 'jugador@example.com', key]);
+  return { court, date, reserve };
+}
+
+test('reserva pendiente conserva precio, seña y plazo; reintento no duplica ni cambia cotización', async () => {
+  const { court, reserve } = await reservationFixture();
+  const key = randomUUID();
+  const booking = (await reserve(1080, key)).rows[0];
+  assert.equal(booking.status, 'pending_deposit');
+  assert.equal(Number(booking.total_in_cents), 3000000);
+  assert.equal(Number(booking.deposit_in_cents), 900000);
+  assert.equal(new Date(booking.expires_at) - new Date(booking.created_at), 15 * 60000);
+  await member(users.ownerA, 'update public.courts set price_in_cents=4000000 where id=$1', [court]);
+  assert.deepEqual((await reserve(1080, key)).rows[0], booking);
+  await assert.rejects(reserve(1140, key), e => e.code === '22023');
+  assert.equal((await db.query('select * from public.reservation_events where reservation_id=$1', [booking.id])).rows.length, 1);
+  await assert.rejects(reserve(), e => e.code === '23P01');
+  assert.equal((await reserve(1140)).rows[0].status, 'pending_deposit');
+});
+
+test('reservas: aislamiento, usuario verificado, sin escrituras ni confirmación desde navegador', async () => {
+  const { reserve } = await reservationFixture();
+  const booking = (await reserve()).rows[0];
+  for (const user of [users.ownerB, users.guest, users.unverified]) await denied(reserve(1140, randomUUID(), user));
+  for (const table of ['reservations', 'court_occupancies', 'reservation_events']) {
+    await denied(as('anon', null, `select * from public.${table}`));
+    assert.equal((await member(users.ownerB, `select * from public.${table} where complex_id=$1`, [a])).rows.length, 0);
+    await denied(member(users.ownerA, `delete from public.${table} where complex_id=$1`, [a]));
+  }
+  await denied(member(users.ownerA, "update public.reservations set status='confirmed' where id=$1", [booking.id]));
+  await denied(member(users.ownerA, 'update public.court_occupancies set active=false where id=$1', [booking.id]));
+});
+
+test('vencimiento libera el turno al crear y deja historial; reintento vencido no crea otra reserva', async () => {
+  const { reserve } = await reservationFixture();
+  const key = randomUUID();
+  const first = (await reserve(1080, key)).rows[0];
+  await db.query("update public.reservations set created_at=now()-interval '16 minutes', expires_at=now()-interval '1 minute' where id=$1", [first.id]);
+  const second = (await reserve()).rows[0];
+  assert.notEqual(second.id, first.id);
+  assert.equal((await reserve(1080, key)).rows[0].status, 'expired');
+  assert.equal((await db.query('select active from public.court_occupancies where id=$1', [first.id])).rows[0].active, false);
+  assert.deepEqual((await db.query('select event from public.reservation_events where reservation_id=$1 order by occurred_at', [first.id])).rows.map(r => r.event), ['created', 'expired']);
+});
+
+test('la exclusión común también impide bloqueos superpuestos; extremos contiguos son válidos', async () => {
+  const { court, reserve } = await reservationFixture();
+  const booking = (await reserve()).rows[0];
+  await assert.rejects(db.query("insert into public.court_occupancies(complex_id,court_id,kind,starts_at,ends_at) select complex_id,court_id,'block',starts_at,ends_at from public.court_occupancies where id=$1", [booking.id]), e => e.code === '23P01');
+  await db.query("insert into public.court_occupancies(complex_id,court_id,kind,starts_at,ends_at) select complex_id,court_id,'block',ends_at,ends_at+interval '1 hour' from public.court_occupancies where id=$1", [booking.id]);
+  await assert.rejects(reserve(1140), e => e.code === '23P01');
+  assert.equal((await db.query('select * from public.reservations where court_id=$1', [court])).rows.length, 1);
+});
+
+test('valida grilla, ventana, jornada cerrada y madrugada perteneciente a la apertura anterior', async () => {
+  const { court, date, reserve } = await reservationFixture();
+  for (const minute of [1079, 1081, 1560, -1]) await assert.rejects(reserve(minute), e => e.code === '22023');
+  const dates = (await db.query("select to_char(current_date-2,'YYYY-MM-DD') as past, to_char(current_date+32,'YYYY-MM-DD') as future, to_char($1::date+1,'YYYY-MM-DD') as next", [date])).rows[0];
+  await assert.rejects(reserve(1080, randomUUID(), users.ownerA, dates.past), e => e.code === '22023');
+  await assert.rejects(reserve(1080, randomUUID(), users.ownerA, dates.future), e => e.code === '22023');
+  await member(users.ownerA, 'insert into public.court_date_exceptions(complex_id,court_id,service_date,closed) values ($1,$2,$3,true)', [a, court, dates.next]);
+  const night = (await reserve(1500)).rows[0];
+  const occupancy = (await db.query("select to_char(starts_at at time zone 'America/Argentina/Buenos_Aires','YYYY-MM-DD HH24:MI') as local from public.court_occupancies where id=$1", [night.id])).rows[0];
+  assert.equal(occupancy.local, `${dates.next} 01:00`);
+  await assert.rejects(reserve(1080, randomUUID(), users.ownerA, dates.next), e => e.code === '22023');
+  await assert.rejects(reserve(1500, randomUUID(), users.ownerA, dates.next), e => e.code === '22023');
+});
+
+test('seña usa enteros, redondea medio centavo hacia arriba y respeta 90 minutos de pádel', async () => {
+  for (const [price, deposit] of [[1, 0], [5, 2], [15, 5], [99999999999, 30000000000]]) {
+    const { reserve } = await reservationFixture(price, 'padel');
+    const booking = (await reserve()).rows[0];
+    assert.equal(Number(booking.deposit_in_cents), deposit);
+    assert.equal(booking.duration_minutes, 90);
+    await assert.rejects(reserve(1140), e => e.code === '22023');
+    assert.equal((await reserve(1170)).rows[0].status, 'pending_deposit');
+  }
+});
 
 test('alta atómica crea propietario y auditoría; error no deja complejo huérfano', async () => {
   assert.equal((await db.query('select * from private.onboarding_audit')).rows.length, 2);
@@ -152,7 +238,7 @@ test('el propietario no puede revocarse ni ser degradado por una invitación', a
 
 test('todas las tablas tienen RLS y ninguna función queda ejecutable por PUBLIC', async () => {
   const tables = await db.query("select relname, relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname in ('public', 'private') and c.relkind = 'r'");
-  assert.equal(tables.rows.length, 7);
+  assert.equal(tables.rows.length, 11);
   assert.ok(tables.rows.every((table) => table.relrowsecurity));
   const grants = await db.query("select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a where n.nspname in ('public', 'private') and a.grantee = 0 and a.privilege_type = 'EXECUTE'");
   assert.deepEqual(grants.rows, []);
@@ -215,4 +301,28 @@ test('horarios: reemplazo atómico, aislamiento, medianoche y control de versió
   await rpc(users.ownerA, a, 1, [...original, { weekday: 0, opens_minute: 120, closes_minute: 240 }]);
   await rpc(users.ownerA, a, 2, []);
   assert.equal((await member(users.ownerA, 'select * from public.court_weekly_hours where court_id=$1', [court.id])).rows.length, 0);
+});
+
+test('excepciones: aislamiento, clave compuesta, validación y actualización sin mover cancha', async () => {
+  const court = (await member(users.ownerA, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Excepciones','football-5',3000000) returning id", [a])).rows[0].id;
+  await member(users.ownerA, "insert into public.court_date_exceptions values ($1,$2,'2026-11-03',true,null,null)", [a,court]);
+  assert.equal((await member(users.ownerB, 'select * from public.court_date_exceptions')).rows.length, 0);
+  await denied(as('anon', null, 'select * from public.court_date_exceptions'));
+  await denied(member(users.ownerB, "insert into public.court_date_exceptions values ($1,$2,'2026-11-04',true,null,null)", [a,court]));
+  await assert.rejects(member(users.ownerB, "insert into public.court_date_exceptions values ($1,$2,'2026-11-04',true,null,null)", [b,court]), e => e.code === '23503');
+  await assert.rejects(member(users.ownerA, "update public.court_date_exceptions set closed=false, opens_minute=1080, closes_minute=1080 where court_id=$1", [court]), e => e.code === '23514');
+  await member(users.ownerA, 'update public.court_date_exceptions set closed=false, opens_minute=1080, closes_minute=1560 where court_id=$1', [court]);
+  assert.equal((await member(users.ownerA, 'select closes_minute from public.court_date_exceptions where court_id=$1', [court])).rows[0].closes_minute,1560);
+  await denied(member(users.ownerA, 'update public.court_date_exceptions set complex_id=$1 where court_id=$2', [b,court]));
+  await denied(member(users.ownerA, 'delete from public.court_date_exceptions where court_id=$1', [court]));
+});
+
+test('restauración de excepción conserva datos y respeta el complejo', async () => {
+  const court = (await member(users.ownerA, "insert into public.courts(complex_id,name,sport,price_in_cents) values ($1,'Restauración','football-5',100) returning id", [a])).rows[0].id;
+  await member(users.ownerA, "insert into public.court_date_exceptions(complex_id,court_id,service_date,closed) values ($1,$2,'2026-12-01',true)", [a,court]);
+  assert.equal((await member(users.ownerB, 'update public.court_date_exceptions set active=false where court_id=$1 returning *', [court])).rows.length,0);
+  await member(users.ownerA, 'update public.court_date_exceptions set active=false where court_id=$1', [court]);
+  assert.deepEqual((await member(users.ownerA, 'select active,closed from public.court_date_exceptions where court_id=$1', [court])).rows,[{active:false,closed:true}]);
+  await member(users.ownerA, 'update public.court_date_exceptions set active=true where court_id=$1', [court]);
+  assert.equal((await member(users.ownerA, 'select active from public.court_date_exceptions where court_id=$1', [court])).rows[0].active,true);
 });

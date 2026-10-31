@@ -68,3 +68,19 @@ Cada respuesta debe registrarse aquí y reflejarse en el contrato de transicione
 F01: inicializar aplicación, fijar versiones compatibles, pnpm/lockfile, estilos y comandos reales. F02: componentes y layout. No inicializar tablas de reservas ni integración de pagos bajo políticas supuestas. No crear aún un portal de cuentas de jugadores: la reserva invitada es el recorrido confirmado.
 
 Para cerrar F00.3 se necesita preparar la aplicación de Mercado Pago, vendedores/comprador de prueba y un callback HTTPS. Las credenciales deben configurarse localmente en un almacén seguro o variables excluidas del repositorio; nunca en estos documentos ni en el chat. No se ha solicitado ni ejecutado un cobro real.
+
+## D05 — Anticipación y excepciones confirmadas, 29 de octubre de 2026
+
+Valen confirmó un mínimo de 2 horas y un máximo de 30 días para reservar. La validación inicial usa límites inclusivos sobre el inicio del turno y el reloj del servidor. Interpretación implementada del máximo: 30 períodos de 24 horas desde ese instante, no hasta el final del día 30. La función checkBookingWindow valida esos instantes; su integración transaccional en la creación de reservas queda para F06.
+
+También confirmó ambas excepciones por fecha: cierre de jornada completa y reemplazo del horario habitual por uno especial. Su persistencia e interfaz siguen pendientes.
+
+Aclaración de Valen del 29 de octubre: la excepción corresponde a la fecha de apertura de la jornada, incluyendo su continuación después de medianoche. Cerrar el martes elimina toda la jornada que comienza el martes y su continuación en la madrugada del miércoles. Por ejemplo, para 18:00–02:00 no se ofrecen los turnos del martes de noche ni miércoles 00:00–01:00 y 01:00–02:00. Se conserva la madrugada del martes perteneciente a la jornada del lunes. Esta definición sustituye la interpretación anterior de cierre por 24 horas civiles (00:00–24:00). Esto define disponibilidad; no autoriza cancelar automáticamente reservas existentes.
+
+## D07/D08 — Seña y espera, 29 de octubre de 2026
+
+Valen confirmó que una reserva cargada por el equipo debe esperar una seña antes de confirmarse. Para reservas de jugadores aprobó una seña del 30% y una retención del turno durante 15 minutos mientras pagan. Estas decisiones quedan registradas para F06/F09; todavía no hay creación de reservas ni cobro integrado.
+
+Confirmación posterior de Valen: se aplica la misma seña del 30% y espera de 15 minutos a equipo y jugadores. Al vencer el plazo sin pago se libera el turno. El cálculo redondea al centavo más cercano, con medio centavo hacia arriba. Un pago aprobado después del vencimiento genera una incidencia para revisión del propietario y no confirma automáticamente la reserva. No inferir permisos para registrar pagos manuales, cancelaciones o devoluciones.
+
+La primera implementación del motor está documentada en [F06 — Reservas pendientes](../architecture/f06-reservas.md). La confirmación por pago y la gestión de incidencias requieren la integración posterior con el proveedor.
