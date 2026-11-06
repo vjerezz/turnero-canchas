@@ -2,11 +2,11 @@
 import { useActionState } from "react";
 import { Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import type { CourtRow } from "@/lib/supabase/app-database";
+import type { Tables } from "@/lib/supabase/database.types";
 import { sports } from "./schedule";
 import { saveCourt } from "./actions";
 
-export function CourtForm({ court }: { court?: CourtRow }) {
+export function CourtForm({ court }: { court?: Tables<"courts"> }) {
   const [state, action, pending] = useActionState(saveCourt, { message: "" });
   return <form action={action} className="ui-stack">
     {court && <input type="hidden" name="id" value={court.id} />}

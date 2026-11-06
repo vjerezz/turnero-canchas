@@ -35,6 +35,161 @@ export type Database = {
         }
         Relationships: []
       }
+      court_date_exceptions: {
+        Row: {
+          active: boolean
+          closed: boolean
+          closes_minute: number | null
+          complex_id: string
+          court_id: string
+          opens_minute: number | null
+          service_date: string
+        }
+        Insert: {
+          active?: boolean
+          closed: boolean
+          closes_minute?: number | null
+          complex_id: string
+          court_id: string
+          opens_minute?: number | null
+          service_date: string
+        }
+        Update: {
+          active?: boolean
+          closed?: boolean
+          closes_minute?: number | null
+          complex_id?: string
+          court_id?: string
+          opens_minute?: number | null
+          service_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_date_exceptions_complex_id_court_id_fkey"
+            columns: ["complex_id", "court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["complex_id", "id"]
+          },
+        ]
+      }
+      court_occupancies: {
+        Row: {
+          active: boolean
+          complex_id: string
+          court_id: string
+          ends_at: string
+          id: string
+          kind: string
+          starts_at: string
+        }
+        Insert: {
+          active?: boolean
+          complex_id: string
+          court_id: string
+          ends_at: string
+          id?: string
+          kind: string
+          starts_at: string
+        }
+        Update: {
+          active?: boolean
+          complex_id?: string
+          court_id?: string
+          ends_at?: string
+          id?: string
+          kind?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_occupancies_complex_id_court_id_fkey"
+            columns: ["complex_id", "court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["complex_id", "id"]
+          },
+        ]
+      }
+      court_weekly_hours: {
+        Row: {
+          closes_minute: number
+          complex_id: string
+          court_id: string
+          opens_minute: number
+          weekday: number
+        }
+        Insert: {
+          closes_minute: number
+          complex_id: string
+          court_id: string
+          opens_minute: number
+          weekday: number
+        }
+        Update: {
+          closes_minute?: number
+          complex_id?: string
+          court_id?: string
+          opens_minute?: number
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_weekly_hours_complex_id_court_id_fkey"
+            columns: ["complex_id", "court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["complex_id", "id"]
+          },
+        ]
+      }
+      courts: {
+        Row: {
+          active: boolean
+          complex_id: string
+          created_at: string
+          currency: string
+          duration_minutes: number | null
+          hours_version: number
+          id: string
+          name: string
+          price_in_cents: number
+          sport: string
+        }
+        Insert: {
+          active?: boolean
+          complex_id: string
+          created_at?: string
+          currency?: string
+          duration_minutes?: number | null
+          hours_version?: number
+          id?: string
+          name: string
+          price_in_cents: number
+          sport: string
+        }
+        Update: {
+          active?: boolean
+          complex_id?: string
+          created_at?: string
+          currency?: string
+          duration_minutes?: number | null
+          hours_version?: number
+          id?: string
+          name?: string
+          price_in_cents?: number
+          sport?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courts_complex_id_fkey"
+            columns: ["complex_id"]
+            isOneToOne: false
+            referencedRelation: "complexes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           complex_id: string
@@ -64,6 +219,109 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "complexes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservation_events: {
+        Row: {
+          complex_id: string
+          event: string
+          id: string
+          occurred_at: string
+          reservation_id: string
+        }
+        Insert: {
+          complex_id: string
+          event: string
+          id?: string
+          occurred_at: string
+          reservation_id: string
+        }
+        Update: {
+          complex_id?: string
+          event?: string
+          id?: string
+          occurred_at?: string
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_events_complex_id_reservation_id_fkey"
+            columns: ["complex_id", "reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["complex_id", "id"]
+          },
+        ]
+      }
+      reservations: {
+        Row: {
+          complex_id: string
+          court_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          deposit_in_cents: number
+          deposit_percent: number
+          duration_minutes: number
+          expires_at: string
+          hold_minutes: number
+          id: string
+          request_id: string
+          service_date: string
+          start_minute: number
+          status: string
+          total_in_cents: number
+        }
+        Insert: {
+          complex_id: string
+          court_id: string
+          created_at: string
+          created_by: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          deposit_in_cents: number
+          deposit_percent?: number
+          duration_minutes: number
+          expires_at: string
+          hold_minutes?: number
+          id: string
+          request_id: string
+          service_date: string
+          start_minute: number
+          status?: string
+          total_in_cents: number
+        }
+        Update: {
+          complex_id?: string
+          court_id?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          deposit_in_cents?: number
+          deposit_percent?: number
+          duration_minutes?: number
+          expires_at?: string
+          hold_minutes?: number
+          id?: string
+          request_id?: string
+          service_date?: string
+          start_minute?: number
+          status?: string
+          total_in_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_complex_id_court_id_id_fkey"
+            columns: ["complex_id", "court_id", "id"]
+            isOneToOne: false
+            referencedRelation: "court_occupancies"
+            referencedColumns: ["complex_id", "court_id", "id"]
           },
         ]
       }
@@ -129,12 +387,104 @@ export type Database = {
         }
         Returns: string
       }
+      create_quoted_team_reservation: {
+        Args: {
+          expected_total: number
+          guest_email: string
+          guest_name: string
+          idempotency_key: string
+          target_complex: string
+          target_court: string
+          target_date: string
+          target_minute: number
+        }
+        Returns: {
+          complex_id: string
+          court_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          deposit_in_cents: number
+          deposit_percent: number
+          duration_minutes: number
+          expires_at: string
+          hold_minutes: number
+          id: string
+          request_id: string
+          service_date: string
+          start_minute: number
+          status: string
+          total_in_cents: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reservations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_team_reservation: {
+        Args: {
+          guest_email: string
+          guest_name: string
+          idempotency_key: string
+          target_complex: string
+          target_court: string
+          target_date: string
+          target_minute: number
+        }
+        Returns: {
+          complex_id: string
+          court_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          deposit_in_cents: number
+          deposit_percent: number
+          duration_minutes: number
+          expires_at: string
+          hold_minutes: number
+          id: string
+          request_id: string
+          service_date: string
+          start_minute: number
+          status: string
+          total_in_cents: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reservations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_team_availability: {
+        Args: {
+          target_complex: string
+          target_court: string
+          target_date: string
+        }
+        Returns: Json
+      }
       invite_administrator: {
         Args: { recipient_email: string; target_complex: string }
         Returns: {
           invitation_id: string
           invitation_token: string
         }[]
+      }
+      replace_court_weekly_hours: {
+        Args: {
+          expected_version: number
+          target_complex: string
+          target_court: string
+          windows: Json
+        }
+        Returns: undefined
       }
       revoke_administrator: {
         Args: { target_complex: string; target_user: string }

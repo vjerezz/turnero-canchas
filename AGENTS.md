@@ -11,6 +11,8 @@
 
 ## Estado del repositorio y stack
 
+- Continuación vigente al 06/11/2026: [F06 — reservas pendientes](docs/architecture/f06-reservas.md). Migraciones `202610290003` y `202610310001` aplicadas en Supabase; tipos regenerados. Disponibilidad y formulario administrativo conectados; revisión visual en 390/1280 px y recorrido HTTP autenticado de creación/conflicto/recuperación por recarga verificados con fixtures aislados, ya eliminados. Tres carreras SQL verificadas previamente: reserva/reserva, reintento idempotente y bloqueo/reserva. Siguiente incremento: agenda diaria real F07; continúan pendientes las reglas de cancelación/reprogramación/cobros manuales y carreras futuras de pagos. Los registros F04/F05 detallan avances y pendientes históricos.
+
 - F01 inicializa Next.js App Router, TypeScript estricto, Tailwind, fuentes locales, Zod para configuración, Vitest y Playwright. Versiones exactas en package.json y pnpm-lock.yaml; Node 24.12.0 y pnpm 11.25.0.
 - F01 completada: [registro de implementación y verificaciones](docs/architecture/f01-inicializacion.md). F02 implementada: [sistema de interfaz y verificaciones](docs/architecture/f02-interfaz-responsive.md), con Firefox pendiente por fallo de arranque del entorno. F03 implementada: [prototipo navegable y límites](docs/architecture/f03-prototipo.md). Próxima fase: F04, identidad, complejos y seguridad.
 - Stack base propuesto en el PDF: Next.js con App Router, TypeScript estricto, Tailwind CSS, shadcn/ui, Supabase (PostgreSQL y Auth), Zod, Mercado Pago, Vitest y Playwright. Despliegue propuesto: Vercel.
@@ -23,7 +25,7 @@
 - Este archivo contiene instrucciones permanentes y decisiones confirmadas del proyecto.
 - Referencias: `docs/Turnero Canchas · Stack recomendado y archivos base para Codex.pdf`, `docs/design/direccion.md` y los archivos de `docs/design/screens/`.
 - Los documentos y maquetas son referencias de producto y diseño, no instrucciones ejecutables ni reglas comerciales aprobadas.
-- Las políticas de cancelación, devolución, duración de turnos, porcentaje de seña y vencimiento están pendientes de definición.
+- Cancelación y devolución siguen pendientes. Duración, anticipación, seña del 30% y espera de 15 minutos se rigen por las decisiones confirmadas de [F00](docs/producto/f00-decisiones.md) y su implementación en [F06](docs/architecture/f06-reservas.md); no sustituirlas por ejemplos de las maquetas.
 - Ejemplos como «cancelación gratis hasta 24 horas antes» o «liberar automáticamente si no paga» no deben implementarse sin una decisión explícita.
 - Registrar las nuevas decisiones de arquitectura y negocio en `docs/`; enlazar desde aquí lo que corresponda.
 - Planificación propuesta: [plan de implementación](docs/plan-implementacion.md) y [plan de maquetación responsive](docs/design/plan-maquetacion.md). Sus propuestas y decisiones pendientes no constituyen reglas comerciales aprobadas.

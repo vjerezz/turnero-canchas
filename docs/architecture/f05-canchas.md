@@ -1,5 +1,7 @@
 # F05 — Canchas y precio fijo
 
+Actualización del 31/10/2026: se regeneraron los tipos desde Supabase con todas las migraciones de F05/F06 y se eliminó `src/lib/supabase/app-database.ts`. Las menciones al contrato manual y a regeneración pendiente más abajo son históricas. Ver [registro F06](f06-reservas.md).
+
 28 de octubre de 2026. Implementado y con las tres migraciones aplicadas en Supabase de desarrollo mediante SQL Editor.
 
 Verificación: 14 escenarios SQL embebidos y 65 pruebas unitarias aprobados; lint y TypeScript sin errores. Se abrió el formulario de nueva cancha en el navegador integrado con la sesión propietaria de Soccer-v1 y se inspeccionaron campos y botón, con desplazamiento vertical. No se guardaron canchas reales; falta verificar creación/edición/desactivación de extremo a extremo, además de la matriz completa de tamaños y teclado.

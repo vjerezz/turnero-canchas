@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { requireComplex } from "@/features/auth/session";
 import { HoursForm } from "@/features/courts/hours-form";
+import { sportSchema } from "@/features/courts/schedule";
 import { weekdays, formatLocalMinute, weeklyTurnPreview } from "@/features/courts/weekly-hours";
 
 export default async function HoursPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ guardado?: string }> }) {
@@ -25,7 +26,7 @@ export default async function HoursPage({ params, searchParams }: { params: Prom
     <h2>Turnos según los horarios guardados</h2><p>Esta vista muestra los horarios posibles. La disponibilidad y las reservas se incorporarán en la siguiente fase.</p>
     {windows.length === 0 && <p>Todos los días están cerrados hasta que cargues horarios.</p>}
     {windows.map((window) => {
-      const turns = weeklyTurnPreview(window, court.sport);
+      const turns = weeklyTurnPreview(window, sportSchema.parse(court.sport));
       const label = (minute: number) => `${formatLocalMinute(minute)}${minute >= 1440 ? " (día siguiente)" : ""}`;
       return <section key={window.weekday} className="ui-stack"><h3>{weekdays[window.weekday]}</h3>
         {turns.length === 0 ? <p>La franja no alcanza para un turno completo.</p> : <ul>{turns.map((turn) => <li key={turn.start}>{label(turn.start)}–{label(turn.end)}</li>)}</ul>}

@@ -226,6 +226,8 @@ Estado: migración de identidad aplicada en Supabase, tipos generados, cliente y
 
 ### F06 — Motor transaccional de disponibilidad y reservas
 
+Actualización del 06/11/2026: migraciones de reservas/disponibilidad aplicadas y tipos regenerados. Tres carreras SQL aprobadas; disponibilidad con ocupaciones y formulario administrativo conectados. Recorrido HTTP autenticado de creación, conflicto y recuperación por recarga verificado con fixtures aislados y eliminados. Ver [registro F06](architecture/f06-reservas.md). Puede iniciarse la agenda diaria F07 sobre estas operaciones; no se consideran aprobadas reglas pendientes ni verificadas carreras futuras de pagos.
+
 **Dependencia:** F05 y decisiones D07–D09. **Resultado:** operaciones de reserva seguras antes de exponerlas al público.
 
 - F06.1: implementar estados y transiciones aprobadas; historial de acciones relevantes.

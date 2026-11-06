@@ -35,7 +35,7 @@ test("catálogo interno no disponible en producción", async ({ page }) => {
 });
 
 test("prototipo y fixtures no se muestran en rutas de producción", async ({ request, page }) => {
-  for (const route of ["/demo", "/demo/admin", "/demo/admin/clientes", "/demo/complejos/los-alamos/reservar", "/demo/reservas/ejemplo"]) {
+  for (const route of ["/dev/reservas", "/demo", "/demo/admin", "/demo/admin/clientes", "/demo/complejos/los-alamos/reservar", "/demo/reservas/ejemplo"]) {
     const response = await request.get(route);
     expect(response.status(), route).toBe(404);
   }

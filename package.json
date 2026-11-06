@@ -19,7 +19,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:ui": "playwright test --config playwright.ui.config.ts",
     "test:demo": "playwright test --config playwright.demo.config.ts",
-    "test:db": "node --test tests/database/*.test.mjs"
+    "test:db": "node --test tests/database/*.test.mjs",
+    "test:db:concurrency": "node --env-file=.env.local tests/database/remote-concurrency.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "5.3.0",

@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("el panel exige sesión aunque se falsifique el complejo seleccionado", async ({ page, context }) => {
   await context.addCookies([{ name: "turnero-complex", value: "00000000-0000-4000-8000-000000000001", domain: "127.0.0.1", path: "/admin" }]);
-  for (const route of ["/admin", "/admin/seleccionar-complejo", "/admin/nueva-contrasena"]) {
+  for (const route of ["/admin", "/admin/seleccionar-complejo", "/admin/nueva-contrasena", "/admin/canchas/00000000-0000-4000-8000-000000000002/turnos", "/admin/canchas/00000000-0000-4000-8000-000000000002/reservar?fecha=2026-11-10&minuto=1080"]) {
     await page.goto(route);
     await expect(page).toHaveURL("/admin/ingresar");
     await expect(page.getByRole("heading", { name: "Ingresá a Turnero" })).toBeVisible();

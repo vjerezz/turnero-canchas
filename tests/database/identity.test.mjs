@@ -69,6 +69,35 @@ async function reservationFixture(price = 3000000, sport = 'football-5') {
   return { court, date, reserve };
 }
 
+test('disponibilidad considera ocupaciones, bloques y vencimientos sin exponer clientes', async () => {
+  const { court, date, reserve } = await reservationFixture();
+  const available = async () => (await member(users.ownerA, 'select public.get_team_availability($1,$2,$3) as result', [a, court, date])).rows[0].result;
+  assert.equal((await available()).slots.length, 8);
+  const first = (await reserve()).rows[0];
+  assert.equal((await available()).slots[0].state, 'occupied');
+  assert.equal((await available()).slots[1].state, 'available');
+  assert.ok(!JSON.stringify(await available()).includes('jugador@example.com'));
+  await db.query("update public.reservations set created_at=now()-interval '16 minutes', expires_at=now()-interval '1 minute' where id=$1", [first.id]);
+  assert.equal((await available()).slots[0].state, 'available');
+  assert.equal((await db.query('select status from public.reservations where id=$1', [first.id])).rows[0].status, 'pending_deposit');
+  await db.query("insert into public.court_occupancies(complex_id,court_id,kind,starts_at,ends_at) select complex_id,court_id,'block',ends_at,ends_at+interval '1 hour' from public.court_occupancies where id=$1", [first.id]);
+  assert.equal((await available()).slots[1].state, 'occupied');
+  await denied(member(users.ownerB, 'select public.get_team_availability($1,$2,$3)', [a, court, date]));
+  await denied(as('anon', null, 'select public.get_team_availability($1,$2,$3)', [a, court, date]));
+  await member(users.ownerA, 'update public.courts set active=false where id=$1', [court]);
+  assert.equal((await available()).reason, 'inactive');
+});
+
+test('cotización rechaza precio viejo y conserva precio del reintento', async () => {
+  const { court, date } = await reservationFixture();
+  const key = randomUUID();
+  const quoted = (price) => member(users.ownerA, 'select * from public.create_quoted_team_reservation($1,$2,$3,1080,$4,$5,$6,$7)', [a, court, date, 'Jugador', 'test@example.com', key, price]);
+  await assert.rejects(quoted(1), e => e.code === 'P0001');
+  const first = (await quoted(3000000)).rows[0];
+  await member(users.ownerA, 'update public.courts set price_in_cents=4000000 where id=$1', [court]);
+  assert.deepEqual((await quoted(3000000)).rows[0], first);
+});
+
 test('reserva pendiente conserva precio, seña y plazo; reintento no duplica ni cambia cotización', async () => {
   const { court, reserve } = await reservationFixture();
   const key = randomUUID();

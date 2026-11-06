@@ -16,7 +16,7 @@ F04 en curso: Supabase de desarrollo conectado, migración de identidad aplicada
 
 Clonar el repositorio (o ejecutar `git pull --ff-only` en una copia existente sin cambios pendientes), usar las versiones de Node/pnpm indicadas abajo y ejecutar `pnpm install --frozen-lockfile`. Crear `.env.local` a partir de `.env.example` y configurar las credenciales por separado: Git no incluye `.env.local`. Luego ejecutar `pnpm dev`.
 
-Punto de continuación: F05 incluye excepciones por jornada y vista de turnos por fecha. F06 incorpora el motor SQL de reservas pendientes con seña del 30%, espera de 15 minutos, idempotencia y exclusión de superposiciones. La migración `202610290003_pending_reservations.sql` todavía **no está aplicada al Supabase remoto**. Las migraciones de excepciones `202610290001` y restauración `202610290002` ya fueron aplicadas. Ver [estado y pendientes de F06](docs/architecture/f06-reservas.md) antes de conectar el formulario de reservas o pagos.
+Punto de continuación actualizado al 06/11/2026: F06 conecta disponibilidad real y formulario administrativo con seña del 30%, espera de 15 minutos e idempotencia. Migraciones `202610290003` y `202610310001` aplicadas en Supabase y tipos regenerados. Tres carreras SQL aprobadas; revisión visual y recorrido HTTP autenticado de creación/conflicto/recuperación por recarga verificados con datos aislados y eliminados. Siguiente incremento: agenda diaria real F07, sin agregar políticas de cancelación ni cobros manuales pendientes. Ver [estado y pendientes de F06](docs/architecture/f06-reservas.md).
 
 - Node.js 24.12.0 (ver `.node-version`; rango admitido Node 24 desde esa versión).
 - pnpm 11.25.0, único gestor del proyecto.
@@ -44,6 +44,7 @@ Para el prototipo F03 no se requieren credenciales. Para el acceso real de F04, 
 | `pnpm typecheck` | Genera tipos de rutas y ejecuta TypeScript sin emitir |
 | `pnpm test` | Pruebas unitarias de configuración con Vitest |
 | `pnpm test:db` | Migraciones, funciones y aislamiento RLS en PostgreSQL embebido; sin credenciales ni Docker |
+| `pnpm test:db:concurrency` | Prueba optativa en Supabase de desarrollo: conexiones independientes, fixtures aislados y limpieza final; requiere CLI autenticada y proyecto vinculado |
 | `pnpm test:watch` | Vitest interactivo |
 | `pnpm build` | Compilación de producción |
 | `pnpm start` | Sirve el build de producción |
